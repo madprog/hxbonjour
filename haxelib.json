@@ -1,0 +1,13 @@
+{
+    "name":         "hxbonjour",
+    "url":          "https://github.com/madprog/hxbonjour",
+    "license":      "MIT",
+    "tags":         ["cpp","neko"],
+    "description":  "Bindings to Bonjour protocol",
+    "version":      "0.0.1",
+    "releasenote":  "First release, untested and not functional",
+    "contributors": ["madprog"],
+    "dependencies": {
+        "hxcpp": ""
+    }
+}
