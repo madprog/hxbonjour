@@ -1,5 +1,7 @@
+FLAGS=-DHXCPP_M64
+
 all: haxelib
-	haxe -x TestBonjour -lib hxbonjour
+	haxe -x test.TestBonjour -lib hxbonjour
 #	cd bin && neko Main.n
 
 .PHONY: lib
@@ -8,9 +10,7 @@ lib:
 
 .PHONY: haxelib
 haxelib: lib
-	rm -f hxbonjour.zip
-	zip -r hxbonjour src hxbonjour include ndll build.xml haxelib.json
-	haxelib local hxbonjour.zip
+	haxelib dev hxbonjour .
 
 .PHONY: clean
 clean:

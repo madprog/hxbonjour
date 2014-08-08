@@ -8,6 +8,6 @@
     "releasenote":  "First release, untested and not functional",
     "contributors": ["madprog"],
     "dependencies": {
-        "hxcpp": ""
+        "hxcpp": "",
     }
 }

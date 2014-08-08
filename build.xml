@@ -13,6 +13,11 @@
     </section>
 
     <files id="common">
+        <compilerflag value="-Iinclude" if="windows"/>
+        <section if="linux">
+            <compilerflag value="-I/usr/include/x86_64-linux-gnu"/>
+        </section>
+
         <file name="src/hxbonjour.cpp"/>
         <file name="src/hxcpp.cpp"/>
     </files>
@@ -26,6 +31,14 @@
         <files id="common"/>
 
         <flag value="${LIB_DIR}${LIB_SUFFIX}"/>
+
+        <section if="windows">
+            <lib name="dnssd32.lib" unless="HXCPP_M64"/>
+            <lib name="dnssd64.lib" if="HXCPP_M64"/>
+        </section>
+        <section if="linux">
+            <lib name="-ldns_sd"/>
+        </section>
     </target>
 
     <target id="default">
