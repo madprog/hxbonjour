@@ -3,6 +3,48 @@
 #include <cstring>
 #include <dns_sd.h>
 
+static void throw_error(DNSServiceErrorType error)
+{
+    switch (error)
+    {
+#define DECLARE_ERROR(name) case name: val_throw(alloc_string(#name));
+        DECLARE_ERROR(kDNSServiceErr_NoError);
+        DECLARE_ERROR(kDNSServiceErr_Unknown);
+        DECLARE_ERROR(kDNSServiceErr_NoSuchName);
+        DECLARE_ERROR(kDNSServiceErr_NoMemory);
+        DECLARE_ERROR(kDNSServiceErr_BadParam);
+        DECLARE_ERROR(kDNSServiceErr_BadReference);
+        DECLARE_ERROR(kDNSServiceErr_BadState);
+        DECLARE_ERROR(kDNSServiceErr_BadFlags);
+        DECLARE_ERROR(kDNSServiceErr_Unsupported);
+        DECLARE_ERROR(kDNSServiceErr_NotInitialized);
+        DECLARE_ERROR(kDNSServiceErr_AlreadyRegistered);
+        DECLARE_ERROR(kDNSServiceErr_NameConflict);
+        DECLARE_ERROR(kDNSServiceErr_Invalid);
+        DECLARE_ERROR(kDNSServiceErr_Firewall);
+        DECLARE_ERROR(kDNSServiceErr_Incompatible);
+        DECLARE_ERROR(kDNSServiceErr_BadInterfaceIndex);
+        DECLARE_ERROR(kDNSServiceErr_Refused);
+        DECLARE_ERROR(kDNSServiceErr_NoSuchRecord);
+        DECLARE_ERROR(kDNSServiceErr_NoAuth);
+        DECLARE_ERROR(kDNSServiceErr_NoSuchKey);
+        DECLARE_ERROR(kDNSServiceErr_NATTraversal);
+        DECLARE_ERROR(kDNSServiceErr_DoubleNAT);
+        DECLARE_ERROR(kDNSServiceErr_BadTime);
+        DECLARE_ERROR(kDNSServiceErr_BadSig);
+        DECLARE_ERROR(kDNSServiceErr_BadKey);
+        DECLARE_ERROR(kDNSServiceErr_Transient);
+        DECLARE_ERROR(kDNSServiceErr_ServiceNotRunning);
+        DECLARE_ERROR(kDNSServiceErr_NATPortMappingUnsupported);
+        DECLARE_ERROR(kDNSServiceErr_NATPortMappingDisabled);
+        DECLARE_ERROR(kDNSServiceErr_NoRouter);
+        DECLARE_ERROR(kDNSServiceErr_PollingMode);
+        DECLARE_ERROR(kDNSServiceErr_Timeout);
+
+        default: val_throw(alloc_string("Unknown error"));
+    }
+}
+
 /**
  * DNSServiceConstructFullName()
  *
@@ -64,11 +106,7 @@ value hxbonjour_DNSServiceConstructFullName(value service, value regtype, value 
 
     error = DNSServiceConstructFullName(fullName, _service, _regtype, _domain);
 
-    if (error != kDNSServiceErr_NoError)
-    {
-        if (error == kDNSServiceErr_BadParam) val_throw(alloc_string("kDNSServiceErr_BadParam"));
-        else val_throw(alloc_string("kDNSServiceErr_Unknown"));
-    }
+    if (error != kDNSServiceErr_NoError) throw_error(error);
 
     return alloc_string(fullName);
 }
