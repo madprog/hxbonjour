@@ -7,8 +7,13 @@ import haxe.macro.Expr.ExprOf;
 
 class HXBonjour
 {
+    private static var _initDone = false;
+
     public static function init()
     {
+        if (_initDone) return;
+        _initDone = true;
+
 #if neko
         var initNeko = Lib.load("hxbonjour", "neko_init", 5);
         if (initNeko != null)
@@ -44,6 +49,7 @@ class HXBonjour
     */
     public static function DNSServiceConstructFullName(?service:String, regtype:String, domain:String):String
     {
+        init();
         return _DNSServiceConstructFullName(service, regtype, domain);
     }
     private static var _DNSServiceConstructFullName:String->String->String->String = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceConstructFullName", 3);

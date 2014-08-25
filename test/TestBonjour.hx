@@ -12,11 +12,6 @@ class TestBonjour extends TestCase
     private var _regtype:String = "_test._tcp";
     private var _fullname:String = "TestService._test._tcp.local.";
 
-    public override function setup()
-    {
-        HXBonjour.init();
-    }
-
     public function testConstructFullname()
     {
         var exceptionRaised:Bool = false;
