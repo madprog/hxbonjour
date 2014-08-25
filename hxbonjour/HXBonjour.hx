@@ -46,5 +46,5 @@ class HXBonjour
     {
         return _DNSServiceConstructFullName(service, regtype, domain);
     }
-    private static var _DNSServiceConstructFullName:String->String->String->String = Lib.load("hxbonjour", "hxbonjour_DNSServiceConstructFullName", 3);
+    private static var _DNSServiceConstructFullName:String->String->String->String = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceConstructFullName", 3);
 }
