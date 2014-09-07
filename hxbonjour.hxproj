@@ -39,7 +39,7 @@
     <hidden path="obj" />
   </hiddenPaths>
   <!-- Executed before build -->
-  <preBuildCommand>make haxelib</preBuildCommand>
+  <preBuildCommand>make clean haxelib</preBuildCommand>
   <!-- Executed after build -->
   <postBuildCommand alwaysRun="False" />
   <!-- Other project options -->

@@ -23,6 +23,12 @@ class HXBonjour
                     null, true, false);
         }
 #end
+
+        var init = Lib.load("hxbonjour", "hxbonjour_init", 0);
+        if (init != null)
+        {
+            init();
+        }
     }
 
     /**

@@ -1,5 +1,6 @@
 package test;
 
+import hxbonjour.EnumerateDomains;
 import hxbonjour.HXBonjour;
 import haxe.unit.TestCase;
 import haxe.unit.TestRunner;
@@ -33,6 +34,7 @@ class TestBonjour extends TestCase
     {
         var runner:TestRunner = new TestRunner();
         runner.add(new TestBonjour());
+        runner.add(new TestEnumerateDomains());
         runner.run();
     }
 }

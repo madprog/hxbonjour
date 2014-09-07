@@ -3,6 +3,8 @@
 #include <cstring>
 #include <dns_sd.h>
 
+DEFINE_KIND(k_sdRef);
+
 static void throw_error(DNSServiceErrorType error)
 {
     switch (error)
@@ -44,6 +46,15 @@ static void throw_error(DNSServiceErrorType error)
         default: val_throw(alloc_string("Unknown error"));
     }
 }
+
+value hxbonjour_init()
+{
+    k_sdRef = alloc_kind();
+
+    return alloc_null();
+}
+
+DEFINE_PRIM(hxbonjour_init, 0);
 
 /**
  * DNSServiceConstructFullName()
@@ -112,3 +123,76 @@ value hxbonjour_DNSServiceConstructFullName(value service, value regtype, value 
 }
 
 DEFINE_PRIM(hxbonjour_DNSServiceConstructFullName, 3);
+
+void DNSSD_API hxbonjour_DNSServiceEnumerateDomains_callback(DNSServiceRef sdRef, DNSServiceFlags flags, uint32_t interfaceIndex, DNSServiceErrorType errorCode, const char *replyDomain, void *context)
+{
+    value callBack = (value)context;
+    value args[] =
+    {
+        alloc_int(flags),
+        alloc_int(interfaceIndex),
+        alloc_int(errorCode),
+        alloc_string(replyDomain),
+    };
+    val_callN(callBack, args, sizeof(args) / sizeof(*args));
+}
+
+value hxbonjour_DNSServiceEnumerateDomains(value flags, value callBack)
+{
+    DNSServiceRef sdRef = NULL;
+    DNSServiceFlags _flags = val_int(flags);
+
+    DNSServiceErrorType error = DNSServiceEnumerateDomains(&sdRef, _flags, kDNSServiceInterfaceIndexAny, hxbonjour_DNSServiceEnumerateDomains_callback, callBack);
+
+    if (error != kDNSServiceErr_NoError)
+    {
+        throw_error(error);
+    }
+
+    value handle = alloc_abstract(k_sdRef, sdRef);
+    return handle;
+}
+
+DEFINE_PRIM(hxbonjour_DNSServiceEnumerateDomains, 2);
+
+value hxbonjour_DNSServiceRefDeallocate(value handle)
+{
+    DNSServiceRef sdRef = (DNSServiceRef)val_to_kind(handle, k_sdRef);
+
+    DNSServiceRefDeallocate(sdRef);
+
+    return alloc_null();
+}
+
+DEFINE_PRIM(hxbonjour_DNSServiceRefDeallocate, 1);
+
+value hxbonjour_DNSServiceProcessResult(value handle, value timeout)
+{
+    if (!val_is_kind(handle, k_sdRef))
+        val_throw(alloc_string("handle must be a sdRef"));
+
+    DNSServiceRef sdRef = (DNSServiceRef)val_to_kind(handle, k_sdRef);
+
+    double _timeout;
+    if (val_is_float(timeout)) _timeout = val_float(timeout);
+    else if (val_is_int(timeout)) _timeout = val_int(timeout);
+    else val_throw(alloc_string("timeout must be a float"));
+
+    int sock = DNSServiceRefSockFD(sdRef);
+    struct timeval tv_timeout;
+    tv_timeout.tv_sec = (int)_timeout;
+    tv_timeout.tv_usec = (int)(1000 * (_timeout - (int)_timeout));
+
+    fd_set readfds, writefds, exceptfds;
+    FD_ZERO(&readfds); FD_ZERO(&writefds); FD_ZERO(&exceptfds);
+    FD_SET(sock, &readfds); FD_SET(sock, &exceptfds);
+
+    if (select(0, &readfds, &writefds, &exceptfds, &tv_timeout) != 0)
+    {
+        DNSServiceProcessResult(sdRef);
+    }
+
+    return alloc_null();
+}
+
+DEFINE_PRIM(hxbonjour_DNSServiceProcessResult, 2);
