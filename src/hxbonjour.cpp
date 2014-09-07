@@ -22,6 +22,34 @@
 * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
 *
+*
+* However, some comments are copy-pasted FROM Apple's dns_sd.h, which says:
+********************************************************************************
+*
+* Copyright (c) 2003-2004, Apple Computer, Inc. All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that the following conditions are met:
+*
+* 1.  Redistributions of source code must retain the above copyright notice,
+*     this list of conditions and the following disclaimer.
+* 2.  Redistributions in binary form must reproduce the above copyright notice,
+*     this list of conditions and the following disclaimer in the documentation
+*     and/or other materials provided with the distribution.
+* 3.  Neither the name of Apple Computer, Inc. ("Apple") nor the names of its
+*     contributors may be used to endorse or promote products derived from this
+*     software without specific prior written permission.
+*
+* THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY
+* EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+* DISCLAIMED. IN NO EVENT SHALL APPLE OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
 #include <hx/CFFI.h>
 #include <cstring>
@@ -148,7 +176,48 @@ value hxbonjour_DNSServiceConstructFullName(value service, value regtype, value 
 
 DEFINE_PRIM(hxbonjour_DNSServiceConstructFullName, 3);
 
-void DNSSD_API hxbonjour_DNSServiceEnumerateDomains_callback(DNSServiceRef sdRef, DNSServiceFlags flags, uint32_t interfaceIndex, DNSServiceErrorType errorCode, const char *replyDomain, void *context)
+/* DNSServiceEnumerateDomains()
+ *
+ * Asynchronously enumerate domains available for browsing and registration.
+ *
+ * The enumeration MUST be cancelled via DNSServiceRefDeallocate() when no more domains
+ * are to be found.
+ *
+ * Note that the names returned are (like all of DNS-SD) UTF-8 strings,
+ * and are escaped using standard DNS escaping rules.
+ * (See "Notes on DNS Name Escaping" earlier in this file for more details.)
+ * A graphical browser displaying a hierarchical tree-structured view should cut
+ * the names at the bare dots to yield individual labels, then de-escape each
+ * label according to the escaping rules, and then display the resulting UTF-8 text.
+ *
+ * DNSServiceDomainEnumReply Callback Parameters:
+ *
+ * sdRef:           The DNSServiceRef initialized by DNSServiceEnumerateDomains().
+ *
+ * flags:           Possible values are:
+ *                  kDNSServiceFlagsMoreComing
+ *                  kDNSServiceFlagsAdd
+ *                  kDNSServiceFlagsDefault
+ *
+ * interfaceIndex:  Specifies the interface on which the domain exists. (The index for a given
+ *                  interface is determined via the if_nametoindex() family of calls.)
+ *
+ * errorCode:       Will be kDNSServiceErr_NoError (0) on success, otherwise indicates
+ *                  the failure that occurred (other parameters are undefined if errorCode is nonzero).
+ *
+ * replyDomain:     The name of the domain.
+ *
+ * context:         The context pointer passed to DNSServiceEnumerateDomains.
+ *
+ */
+void DNSSD_API hxbonjour_DNSServiceEnumerateDomains_callback(
+    DNSServiceRef sdRef,
+    DNSServiceFlags flags,
+    uint32_t interfaceIndex,
+    DNSServiceErrorType errorCode,
+    const char *replyDomain,
+    void *context
+)
 {
     value callBack = (value)context;
     value args[] =
@@ -161,12 +230,46 @@ void DNSSD_API hxbonjour_DNSServiceEnumerateDomains_callback(DNSServiceRef sdRef
     val_callN(callBack, args, sizeof(args) / sizeof(*args));
 }
 
+/* DNSServiceEnumerateDomains() Parameters:
+ *
+ * sdRef:           A pointer to an uninitialized DNSServiceRef. If the call succeeds
+ *                  then it initializes the DNSServiceRef, returns kDNSServiceErr_NoError,
+ *                  and the enumeration operation will run indefinitely until the client
+ *                  terminates it by passing this DNSServiceRef to DNSServiceRefDeallocate().
+ *
+ * flags:           Possible values are:
+ *                  kDNSServiceFlagsBrowseDomains to enumerate domains recommended for browsing.
+ *                  kDNSServiceFlagsRegistrationDomains to enumerate domains recommended
+ *                  for registration.
+ *
+ * interfaceIndex:  If non-zero, specifies the interface on which to look for domains.
+ *                  (the index for a given interface is determined via the if_nametoindex()
+ *                  family of calls.) Most applications will pass 0 to enumerate domains on
+ *                  all interfaces. See "Constants for specifying an interface index" for more details.
+ *
+ * callBack:        The function to be called when a domain is found or the call asynchronously
+ *                  fails.
+ *
+ * context:         An application context pointer which is passed to the callback function
+ *                  (may be NULL).
+ *
+ * return value:    Returns kDNSServiceErr_NoError on success (any subsequent, asynchronous
+ *                  errors are delivered to the callback), otherwise returns an error code indicating
+ *                  the error that occurred (the callback is not invoked and the DNSServiceRef
+ *                  is not initialized).
+ */
 value hxbonjour_DNSServiceEnumerateDomains(value flags, value callBack)
 {
     DNSServiceRef sdRef = NULL;
     DNSServiceFlags _flags = val_int(flags);
 
-    DNSServiceErrorType error = DNSServiceEnumerateDomains(&sdRef, _flags, kDNSServiceInterfaceIndexAny, hxbonjour_DNSServiceEnumerateDomains_callback, callBack);
+    DNSServiceErrorType error = DNSServiceEnumerateDomains(
+        &sdRef,
+        _flags,
+        kDNSServiceInterfaceIndexAny,
+        hxbonjour_DNSServiceEnumerateDomains_callback,
+        callBack
+    );
 
     if (error != kDNSServiceErr_NoError)
     {

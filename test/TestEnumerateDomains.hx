@@ -50,7 +50,7 @@ class TestEnumerateDomains extends TestCase
     public function testEnumerateDomains()
     {
         var semaphore = { finished: false };
-        function callBack(callBackInfo:CallBackInfo):Void
+        function callBack(callBackInfo:EnumerateDomainsInfo):Void
         {
             assertEquals(false, callBackInfo.moreComing);
             assertEquals(Add, callBackInfo.action);

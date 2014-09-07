@@ -29,7 +29,7 @@ import #if cpp cpp #else neko #end.Lib;
 import hxbonjour.Flags.ActionFlags;
 import hxbonjour.Flags.EnumerateDomainsFlags;
 
-class CallBackInfo
+class EnumerateDomainsInfo
 {
     public var sdRef(default, null):EnumerateDomains;
     public var moreComing(default, null):Bool;
@@ -49,12 +49,12 @@ class CallBackInfo
     }
 }
 
-typedef CallBack = CallBackInfo->Void;
+typedef EnumerateDomainsCallBack = EnumerateDomainsInfo->Void;
 
 class EnumerateDomains
 {
     private var _dnsHandle:Dynamic = null;
-    private var _callBack:CallBack = null;
+    private var _callBack:EnumerateDomainsCallBack = null;
 
     private function _myCallBack(flags:Int, interfaceIndex:Int, errorCode:Int, replyDomain:String)
     {
@@ -74,10 +74,10 @@ class EnumerateDomains
             default: throw "Invalid errorCode value: " + errorCode;
         };
 
-        _callBack(new CallBackInfo(this, moreComing, action, interfaceIndex, _errorCode, replyDomain));
+        _callBack(new EnumerateDomainsInfo(this, moreComing, action, interfaceIndex, _errorCode, replyDomain));
     }
 
-    public function new(flags:EnumerateDomainsFlags, callBack:CallBack):Void
+    public function new(flags:EnumerateDomainsFlags, callBack:EnumerateDomainsCallBack):Void
     {
         HXBonjour.init();
 
