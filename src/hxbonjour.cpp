@@ -108,6 +108,21 @@ value hxbonjour_init()
 
 DEFINE_PRIM(hxbonjour_init, 0);
 
+bool check_regtype_format(const char *regtype)
+{
+    bool regtype_format_ok = regtype[0] == '_';
+    if (regtype_format_ok)
+    {
+        const char *dot_pos = strchr(regtype, '.');
+        if (dot_pos != NULL)
+        {
+            regtype_format_ok = !strncmp(dot_pos, "._tcp", 6) || !strncmp(dot_pos, "._udp", 6);
+        }
+    }
+
+    return regtype_format_ok;
+}
+
 /**
  * DNSServiceConstructFullName()
  *
@@ -140,31 +155,19 @@ value hxbonjour_DNSServiceConstructFullName(value service, value regtype, value 
     const char *_service, *_regtype, *_domain;
     DNSServiceErrorType error;
 
-    if (!val_is_string(regtype))
-        val_throw(alloc_string("regtype cannot be null"));
+    if (val_is_string(regtype)) _regtype = val_get_string(regtype);
+    else if (val_is_null(regtype)) val_throw(alloc_string("regtype cannot be null"));
+    else val_throw(alloc_string("regtype must be a String"));
 
-    if (!val_is_string(domain))
-        val_throw(alloc_string("domain cannot be null"));
+    if (val_is_string(domain)) _domain = val_get_string(domain);
+    else if (val_is_null(domain)) val_throw(alloc_string("domain cannot be null"));
+    else val_throw(alloc_string("domain must be a String"));
 
-    if (val_is_null(service)) _service = NULL;
-    else if (!val_is_string(service))
-        val_throw(alloc_string("service must be a string"));
-    else _service = val_get_string(service);
+    if (val_is_string(service)) _service = val_get_string(service);
+    else if (val_is_null(service)) _service = NULL;
+    else val_throw(alloc_string("service must be a String"));
 
-    _regtype = val_get_string(regtype);
-    _domain = val_get_string(domain);
-
-    bool regtype_format_ok = _regtype[0] == '_';
-    if (regtype_format_ok)
-    {
-        const char *dot_pos = strchr(_regtype, '.');
-        if (dot_pos != NULL)
-        {
-            regtype_format_ok = !strncmp(dot_pos, "._tcp", 6) || !strncmp(dot_pos, "._udp", 6);
-        }
-    }
-
-    if (!regtype_format_ok)
+    if (!check_regtype_format(_regtype))
         val_throw(alloc_string("regtype should be in the form _proto._(tcp|udp)"));
 
     error = DNSServiceConstructFullName(fullName, _service, _regtype, _domain);
