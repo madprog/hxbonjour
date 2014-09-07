@@ -60,6 +60,7 @@ class TestBonjour extends TestCase
         var runner:TestRunner = new TestRunner();
         runner.add(new TestBonjour());
         runner.add(new TestEnumerateDomains());
+        runner.add(new TestRegisterBrowseResolve());
         runner.run();
     }
 }
