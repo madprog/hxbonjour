@@ -155,16 +155,16 @@ value hxbonjour_DNSServiceConstructFullName(value service, value regtype, value 
     const char *_service, *_regtype, *_domain;
     DNSServiceErrorType error;
 
-    if (val_is_string(regtype)) _regtype = val_get_string(regtype);
-    else if (val_is_null(regtype)) val_throw(alloc_string("regtype cannot be null"));
+    if (val_is_null(regtype)) val_throw(alloc_string("regtype cannot be null"));
+    else if (val_is_string(regtype)) _regtype = val_get_string(regtype);
     else val_throw(alloc_string("regtype must be a String"));
 
-    if (val_is_string(domain)) _domain = val_get_string(domain);
-    else if (val_is_null(domain)) val_throw(alloc_string("domain cannot be null"));
+    if (val_is_null(domain)) val_throw(alloc_string("domain cannot be null"));
+    else if (val_is_string(domain)) _domain = val_get_string(domain);
     else val_throw(alloc_string("domain must be a String"));
 
-    if (val_is_string(service)) _service = val_get_string(service);
-    else if (val_is_null(service)) _service = NULL;
+    if (val_is_null(service)) _service = NULL;
+    else if (val_is_string(service)) _service = val_get_string(service);
     else val_throw(alloc_string("service must be a String"));
 
     if (!check_regtype_format(_regtype))
@@ -326,3 +326,90 @@ value hxbonjour_DNSServiceProcessResult(value handle, value timeout)
 }
 
 DEFINE_PRIM(hxbonjour_DNSServiceProcessResult, 2);
+
+void DNSSD_API hxbonjour_DNSServiceRegister_callback(
+    DNSServiceRef sdRef,
+    DNSServiceFlags flags,
+    DNSServiceErrorType errorCode,
+    const char *name,
+    const char *regtype,
+    const char *domain,
+    void *context
+)
+{
+    value callBack = (value)context;
+    value args[] =
+    {
+        alloc_int(flags),
+        alloc_int(errorCode),
+        alloc_string(name),
+        alloc_string(regtype),
+        alloc_string(domain),
+    };
+    val_callN(callBack, args, sizeof(args) / sizeof(*args));
+}
+
+value hxbonjour_DNSServiceRegister(value *args, int nbArgs)
+{
+    if (nbArgs != 6)
+        val_throw(alloc_string("Function 'hxbonjour_DNSServiceRegister' requires arguments: name, regtype, domain, host, port, callBack"));
+
+    value name = args[0];
+    value regtype = args[1];
+    value domain = args[2];
+    value host = args[3];
+    value port = args[4];
+    value callBack = args[5];
+
+    DNSServiceRef sdRef = NULL;
+    const char *_name;
+    const char *_regtype;
+    const char *_domain;
+    const char *_host;
+    uint16_t _port;
+
+    if (val_is_null(name)) _name = NULL;
+    else if (val_is_string(name)) _name = val_get_string(name);
+    else val_throw(alloc_string("name must be a String"));
+
+    if (val_is_null(regtype)) val_throw(alloc_string("regtype cannot be null"));
+    else if (val_is_string(regtype)) _regtype = val_get_string(regtype);
+    else val_throw(alloc_string("regtype must be a String"));
+
+    if (val_is_null(domain)) _domain = NULL;
+    else if (val_is_string(domain)) _domain = val_get_string(domain);
+    else val_throw(alloc_string("domain must be a String"));
+
+    if (val_is_null(host)) _host = NULL;
+    else if (val_is_string(host)) _host = val_get_string(host);
+    else val_throw(alloc_string("host must be a String"));
+
+    if (val_is_null(port)) val_throw(alloc_string("port cannot be null"));
+    else if (val_is_int(port)) _port = val_get_int(port);
+    else val_throw(alloc_string("port must be an UInt"));
+
+    DNSServiceErrorType error = DNSServiceRegister(
+        &sdRef,
+        0,
+        kDNSServiceInterfaceIndexAny,
+        _name,
+        _regtype,
+        _domain,
+        _host,
+        _port,
+        0,
+        NULL,
+        hxbonjour_DNSServiceRegister_callback,
+        callBack
+    );
+
+    if (error != kDNSServiceErr_NoError)
+    {
+        throw_error(error);
+    }
+
+    value handle = alloc_abstract(k_sdRef, sdRef);
+    return handle;
+}
+
+DEFINE_PRIM_MULT(hxbonjour_DNSServiceRegister);
