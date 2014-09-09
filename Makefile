@@ -1,4 +1,11 @@
-FLAGS=-DHXCPP_M64
+# 32 bits without debug information
+FLAGS=
+# 32 bits with debug information
+#FLAGS=-Ddebug
+# 64 bits without debug information
+#FLAGS=-DHXCPP_M64
+# 64 bits with debug information
+#FLAGS=-Ddebug -DHXCPP_M64
 
 all: haxelib
 	haxe -x test.TestBonjour -lib hxbonjour
