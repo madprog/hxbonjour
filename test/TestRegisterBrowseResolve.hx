@@ -30,6 +30,7 @@ import hxbonjour.BrowseServices;
 import hxbonjour.ErrorCode;
 import hxbonjour.Flags.ActionFlags;
 import hxbonjour.RegisterRecord;
+import hxbonjour.ResolveServices;
 
 using test.HelperMacros;
 
@@ -37,6 +38,7 @@ class TestRegisterBrowseResolve extends TestCase
 {
     var _sdRefRegister:RegisterRecord = null;
     var _sdRefBrowse:BrowseServices = null;
+    var _sdRefResolve:ResolveServices = null;
     var _serviceName:String = null;
     var _regType:String = null;
     var _port:UInt = null;
@@ -84,6 +86,19 @@ class TestRegisterBrowseResolve extends TestCase
             assertEquals(_serviceName, callBackInfo.serviceName);
             assertEquals(_regType, callBackInfo.regtype);
             assertEquals("local.", callBackInfo.replyDomain);
+
+            var semaphoreResolve = { finished: false };
+            function callBackResolve(callBackInfo2:ResolveServicesInfo):Void
+            {
+                semaphoreResolve.finished = true;
+            }
+
+            _sdRefResolve = new ResolveServices(false, callBackInfo.serviceName, callBackInfo.regtype, callBackInfo.replyDomain, callBackResolve);
+
+            while (!semaphoreResolve.finished)
+            {
+                _sdRefResolve.iterate(0);
+            }
         }
 
         _sdRefBrowse = new BrowseServices(_regType, null, callBackBrowse);

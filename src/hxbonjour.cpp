@@ -480,3 +480,77 @@ value hxbonjour_DNSServiceBrowse(value regtype, value domain, value callBack)
 }
 
 DEFINE_PRIM(hxbonjour_DNSServiceBrowse, 3);
+
+void DNSSD_API hxbonjour_DNSServiceResolve_callback(
+    DNSServiceRef sdRef,
+    DNSServiceFlags flags,
+    uint32_t interfaceIndex,
+    DNSServiceErrorType errorCode,
+    const char *fullname,
+    const char *hosttarget,
+    uint16_t port,
+    uint16_t txtLen,
+    const unsigned char *txtRecord,
+    void *context
+)
+{
+    value callBack = (value)context;
+    value args[] =
+    {
+        alloc_int(flags),
+        alloc_int(errorCode),
+        alloc_string(fullname),
+        alloc_string(hosttarget),
+        alloc_int(port),
+    };
+    val_callN(callBack, args, sizeof(args) / sizeof(*args));
+}
+
+value hxbonjour_DNSServiceResolve(value forceMulticast, value name, value regtype, value domain, value callBack)
+{
+    DNSServiceRef sdRef = NULL;
+    DNSServiceFlags _flags;
+    const char *_name;
+    const char *_regtype;
+    const char *_domain;
+
+    if (val_is_null(forceMulticast)) val_throw(alloc_string("forceMulticast cannot be null"));
+    else if (val_is_bool(forceMulticast)) _flags = val_get_bool(forceMulticast) ? kDNSServiceFlagsForceMulticast : 0;
+    else val_throw(alloc_string("forceMulticast must be a Bool"));
+
+    if (val_is_null(name)) val_throw(alloc_string("name cannot be null"));
+    else if (val_is_string(name)) _name = val_get_string(name);
+    else val_throw(alloc_string("name must be a String"));
+
+    if (val_is_null(regtype)) val_throw(alloc_string("regtype cannot be null"));
+    else if (val_is_string(regtype)) _regtype = val_get_string(regtype);
+    else val_throw(alloc_string("regtype must be a String"));
+
+    if (val_is_null(domain)) _domain = NULL;
+    else if (val_is_string(domain)) _domain = val_get_string(domain);
+    else val_throw(alloc_string("domain must be a String"));
+
+    if (!check_regtype_format(_regtype))
+        val_throw(alloc_string("regtype should be in the form _proto._(tcp|udp)"));
+
+    DNSServiceErrorType error = DNSServiceResolve(
+        &sdRef,
+        _flags,
+        kDNSServiceInterfaceIndexAny,
+        _name,
+        _regtype,
+        _domain,
+        hxbonjour_DNSServiceResolve_callback,
+        callBack
+    );
+
+    if (error != kDNSServiceErr_NoError)
+    {
+        throw_error(error);
+    }
+
+    value handle = alloc_abstract(k_sdRef, sdRef);
+    return handle;
+}
+
+DEFINE_PRIM(hxbonjour_DNSServiceResolve, 5);
