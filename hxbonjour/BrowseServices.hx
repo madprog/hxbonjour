@@ -26,37 +26,40 @@
 package hxbonjour;
 
 import #if cpp cpp #else neko #end.Lib;
+import haxe.io.Bytes;
+import haxe.io.BytesOutput;
 import hxbonjour.Flags.ActionFlags;
-import hxbonjour.Flags.EnumerateDomainsFlags;
 
-class EnumerateDomainsInfo
+class BrowseServicesInfo
 {
-    public var sdRef(default, null):EnumerateDomains;
+    public var sdRef(default, null):BrowseServices;
     public var moreComing(default, null):Bool;
     public var action(default, null):ActionFlags;
-    public var interfaceIndex(default, null):Int;
     public var errorCode(default, null):ErrorCode;
+    public var serviceName(default, null):String;
+    public var regtype(default, null):String;
     public var replyDomain(default, null):String;
 
-    public function new(sdRef:EnumerateDomains, moreComing:Bool, action:ActionFlags, interfaceIndex:Int, errorCode:ErrorCode, replyDomain:String)
+    public function new(sdRef:BrowseServices, moreComing:Bool, action:ActionFlags, errorCode:ErrorCode, serviceName:String, regtype:String, replyDomain:String)
     {
         this.sdRef = sdRef;
         this.moreComing = moreComing;
         this.action = action;
-        this.interfaceIndex = interfaceIndex;
         this.errorCode = errorCode;
+        this.serviceName = serviceName;
+        this.regtype = regtype;
         this.replyDomain = replyDomain;
     }
 }
 
-typedef EnumerateDomainsCallBack = EnumerateDomainsInfo->Void;
+typedef BrowseServicesCallBack = BrowseServicesInfo->Void;
 
-class EnumerateDomains
+class BrowseServices
 {
     private var _dnsHandle:Dynamic = null;
-    private var _callBack:EnumerateDomainsCallBack = null;
+    private var _callBack:BrowseServicesCallBack = null;
 
-    private function _myCallBack(flags:UInt, interfaceIndex:Int, errorCode:UInt, replyDomain:String)
+    private function _myCallBack(flags:Int, errorCode:Int, serviceName:String, regtype:String, replyDomain:String)
     {
         var moreComing:Bool = (flags & 0x01) != 0;
         var action:ActionFlags = switch(flags & 0x06)
@@ -72,21 +75,15 @@ class EnumerateDomains
             default: throw "Invalid errorCode value: " + errorCode;
         };
 
-        _callBack(new EnumerateDomainsInfo(this, moreComing, action, interfaceIndex, _errorCode, replyDomain));
+        _callBack(new BrowseServicesInfo(this, moreComing, action, _errorCode, serviceName, regtype, replyDomain));
     }
 
-    public function new(flags:EnumerateDomainsFlags, callBack:EnumerateDomainsCallBack):Void
+    public function new(regtype:String, domain:String, callBack:BrowseServicesCallBack):Void
     {
         HXBonjour.init();
 
-        var _flags:UInt = switch (flags)
-        {
-            case kDNSServiceFlagsBrowseDomains: 0x40;
-            case kDNSServiceFlagsRegistrationDomains: 0x80;
-        };
-
         _callBack = callBack;
-        _dnsHandle = _DNSServiceEnumerateDomains(_flags, _myCallBack);
+        _dnsHandle = _DNSServiceBrowse(regtype, domain, _myCallBack);
     }
 
     public function dispose():Void
@@ -99,7 +96,7 @@ class EnumerateDomains
         _DNSServiceProcessResult(_dnsHandle, timeout);
     }
 
-    private static var _DNSServiceEnumerateDomains:UInt->(UInt->Int->UInt->String->Void)->Dynamic = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceEnumerateDomains", 2);
+    private static var _DNSServiceBrowse:String->String->(Int->Int->String->String->String->Void)->Dynamic = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceBrowse", 3);
     private static var _DNSServiceProcessResult:Dynamic->Float->Void = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceProcessResult", 2);
     private static var _DNSServiceRefDeallocate:Dynamic->Void = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceRefDeallocate", 1);
 }

@@ -26,6 +26,7 @@
 package test;
 
 import haxe.unit.TestCase;
+import hxbonjour.BrowseServices;
 import hxbonjour.ErrorCode;
 import hxbonjour.Flags.ActionFlags;
 import hxbonjour.RegisterRecord;
@@ -35,6 +36,7 @@ using test.HelperMacros;
 class TestRegisterBrowseResolve extends TestCase
 {
     var _sdRefRegister:RegisterRecord = null;
+    var _sdRefBrowse:BrowseServices = null;
     var _serviceName:String = null;
     var _regType:String = null;
     var _port:UInt = null;
@@ -53,10 +55,10 @@ class TestRegisterBrowseResolve extends TestCase
 
     public function testRegisterRecord()
     {
-        var semaphore = { finished: false };
-        function callBack(callBackInfo:RegisterRecordInfo):Void
+        var semaphoreRegister = { finished: false };
+        function callBackRegister(callBackInfo:RegisterRecordInfo):Void
         {
-            semaphore.finished = true;
+            semaphoreRegister.finished = true;
             assertEquals(_sdRefRegister, callBackInfo.sdRef);
             assertEquals(Add, callBackInfo.action);
             assertEquals(NoError, callBackInfo.errorCode);
@@ -65,11 +67,30 @@ class TestRegisterBrowseResolve extends TestCase
             assertEquals("local.", callBackInfo.domain);
         }
 
-        _sdRefRegister = new RegisterRecord(_serviceName, _regType, null, null, _port, callBack);
+        _sdRefRegister = new RegisterRecord(_serviceName, _regType, null, null, _port, callBackRegister);
 
-        while (!semaphore.finished)
+        while (!semaphoreRegister.finished)
         {
             _sdRefRegister.iterate(0);
+        }
+
+        var semaphoreBrowse = { finished: false };
+        function callBackBrowse(callBackInfo:BrowseServicesInfo):Void
+        {
+            semaphoreBrowse.finished = true;
+            assertEquals(NoError, callBackInfo.errorCode);
+            assertEquals(_sdRefBrowse, callBackInfo.sdRef);
+            assertEquals(Add, callBackInfo.action);
+            assertEquals(_serviceName, callBackInfo.serviceName);
+            assertEquals(_regType, callBackInfo.regtype);
+            assertEquals("local.", callBackInfo.replyDomain);
+        }
+
+        _sdRefBrowse = new BrowseServices(_regType, null, callBackBrowse);
+
+        while (!semaphoreBrowse.finished)
+        {
+            _sdRefBrowse.iterate(0);
         }
 
         _sdRefRegister.dispose();

@@ -116,7 +116,10 @@ bool check_regtype_format(const char *regtype)
         const char *dot_pos = strchr(regtype, '.');
         if (dot_pos != NULL)
         {
-            regtype_format_ok = !strncmp(dot_pos, "._tcp", 6) || !strncmp(dot_pos, "._udp", 6);
+            regtype_format_ok = !strncmp(dot_pos, "._tcp", 6)
+                || !strncmp(dot_pos, "._tcp.", 7)
+                || !strncmp(dot_pos, "._udp", 6)
+                || !strncmp(dot_pos, "._udp.", 7);
         }
     }
 
@@ -388,6 +391,9 @@ value hxbonjour_DNSServiceRegister(value *args, int nbArgs)
     else if (val_is_int(port)) _port = val_get_int(port);
     else val_throw(alloc_string("port must be an UInt"));
 
+    if (!check_regtype_format(_regtype))
+        val_throw(alloc_string("regtype should be in the form _proto._(tcp|udp)"));
+
     DNSServiceErrorType error = DNSServiceRegister(
         &sdRef,
         0,
@@ -413,3 +419,64 @@ value hxbonjour_DNSServiceRegister(value *args, int nbArgs)
 }
 
 DEFINE_PRIM_MULT(hxbonjour_DNSServiceRegister);
+
+void DNSSD_API hxbonjour_DNSServiceBrowse_callback(
+    DNSServiceRef sdRef,
+    DNSServiceFlags flags,
+    uint32_t interfaceIndex,
+    DNSServiceErrorType errorCode,
+    const char *serviceName,
+    const char *regtype,
+    const char *replyDomain,
+    void *context
+)
+{
+    value callBack = (value)context;
+    value args[] =
+    {
+        alloc_int(flags),
+        alloc_int(errorCode),
+        alloc_string(serviceName),
+        alloc_string(regtype),
+        alloc_string(replyDomain),
+    };
+    val_callN(callBack, args, sizeof(args) / sizeof(*args));
+}
+
+value hxbonjour_DNSServiceBrowse(value regtype, value domain, value callBack)
+{
+    DNSServiceRef sdRef = NULL;
+    const char *_regtype;
+    const char *_domain;
+
+    if (val_is_null(regtype)) val_throw(alloc_string("regtype cannot be null"));
+    else if (val_is_string(regtype)) _regtype = val_get_string(regtype);
+    else val_throw(alloc_string("regtype must be a String"));
+
+    if (val_is_null(domain)) _domain = NULL;
+    else if (val_is_string(domain)) _domain = val_get_string(domain);
+    else val_throw(alloc_string("domain must be a String"));
+
+    if (!check_regtype_format(_regtype))
+        val_throw(alloc_string("regtype should be in the form _proto._(tcp|udp)"));
+
+    DNSServiceErrorType error = DNSServiceBrowse(
+        &sdRef,
+        0,
+        kDNSServiceInterfaceIndexAny,
+        _regtype,
+        _domain,
+        hxbonjour_DNSServiceBrowse_callback,
+        callBack
+    );
+
+    if (error != kDNSServiceErr_NoError)
+    {
+        throw_error(error);
+    }
+
+    value handle = alloc_abstract(k_sdRef, sdRef);
+    return handle;
+}
+
+DEFINE_PRIM(hxbonjour_DNSServiceBrowse, 3);
