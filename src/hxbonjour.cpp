@@ -388,7 +388,7 @@ value hxbonjour_DNSServiceRegister(value *args, int nbArgs)
     else val_throw(alloc_string("host must be a String"));
 
     if (val_is_null(port)) val_throw(alloc_string("port cannot be null"));
-    else if (val_is_int(port)) _port = val_get_int(port);
+    else if (val_is_int(port)) _port = htons(val_get_int(port));
     else val_throw(alloc_string("port must be an UInt"));
 
     if (!check_regtype_format(_regtype))
@@ -501,7 +501,7 @@ void DNSSD_API hxbonjour_DNSServiceResolve_callback(
         alloc_int(errorCode),
         alloc_string(fullname),
         alloc_string(hosttarget),
-        alloc_int(port),
+        alloc_int(ntohs(port)),
     };
     val_callN(callBack, args, sizeof(args) / sizeof(*args));
 }

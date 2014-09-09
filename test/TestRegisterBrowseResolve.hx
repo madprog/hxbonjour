@@ -29,6 +29,7 @@ import haxe.unit.TestCase;
 import hxbonjour.BrowseServices;
 import hxbonjour.ErrorCode;
 import hxbonjour.Flags.ActionFlags;
+import hxbonjour.HXBonjour;
 import hxbonjour.RegisterRecord;
 import hxbonjour.ResolveServices;
 
@@ -42,17 +43,23 @@ class TestRegisterBrowseResolve extends TestCase
     var _serviceName:String = null;
     var _regType:String = null;
     var _port:UInt = null;
+    var _domain:String;
+    var _fullname:String;
 
     public override function setup()
     {
         _serviceName = "TestService";
         _regType = "_test._tcp.";
         _port = 1111;
+        _domain = "local.";
+        _fullname = HXBonjour.DNSServiceConstructFullName(_serviceName, _regType, _domain);
     }
 
     public override function tearDown()
     {
         if (_sdRefRegister != null) _sdRefRegister.dispose();
+        if (_sdRefBrowse != null) _sdRefBrowse.dispose();
+        if (_sdRefResolve != null) _sdRefResolve.dispose();
     }
 
     public function testRegisterRecord()
@@ -66,7 +73,7 @@ class TestRegisterBrowseResolve extends TestCase
             assertEquals(NoError, callBackInfo.errorCode);
             assertEquals(_serviceName, callBackInfo.name);
             assertEquals(_regType, callBackInfo.regType);
-            assertEquals("local.", callBackInfo.domain);
+            assertEquals(_domain, callBackInfo.domain);
         }
 
         _sdRefRegister = new RegisterRecord(_serviceName, _regType, null, null, _port, callBackRegister);
@@ -85,12 +92,17 @@ class TestRegisterBrowseResolve extends TestCase
             assertEquals(Add, callBackInfo.action);
             assertEquals(_serviceName, callBackInfo.serviceName);
             assertEquals(_regType, callBackInfo.regtype);
-            assertEquals("local.", callBackInfo.replyDomain);
+            assertEquals(_domain, callBackInfo.replyDomain);
 
             var semaphoreResolve = { finished: false };
             function callBackResolve(callBackInfo2:ResolveServicesInfo):Void
             {
                 semaphoreResolve.finished = true;
+                assertEquals(NoError, callBackInfo2.errorCode);
+                assertEquals(_sdRefResolve, callBackInfo2.sdRef);
+                assertEquals(_fullname, callBackInfo2.fullname);
+                assertTrue(callBackInfo2.hosttarget != null);
+                assertEquals(_port, callBackInfo2.port);
             }
 
             _sdRefResolve = new ResolveServices(false, callBackInfo.serviceName, callBackInfo.regtype, callBackInfo.replyDomain, callBackResolve);

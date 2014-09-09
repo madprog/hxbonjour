@@ -27,7 +27,6 @@ package hxbonjour;
 
 import #if cpp cpp #else neko #end.Lib;
 import haxe.io.Bytes;
-import haxe.io.BytesOutput;
 import hxbonjour.Flags.ActionFlags;
 
 class BrowseServicesInfo

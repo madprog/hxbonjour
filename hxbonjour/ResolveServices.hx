@@ -27,8 +27,6 @@ package hxbonjour;
 
 import #if cpp cpp #else neko #end.Lib;
 import haxe.io.Bytes;
-import haxe.io.BytesInput;
-import haxe.io.BytesOutput;
 import hxbonjour.Flags.ActionFlags;
 
 class ResolveServicesInfo
@@ -36,17 +34,17 @@ class ResolveServicesInfo
     public var sdRef(default, null):ResolveServices;
     public var moreComing(default, null):Bool;
     public var errorCode(default, null):ErrorCode;
-    public var serviceName(default, null):String;
-    public var regtype(default, null):String;
+    public var fullname(default, null):String;
+    public var hosttarget(default, null):String;
     public var port(default, null):UInt;
 
-    public function new(sdRef:ResolveServices, moreComing:Bool, errorCode:ErrorCode, serviceName:String, regtype:String, port:UInt)
+    public function new(sdRef:ResolveServices, moreComing:Bool, errorCode:ErrorCode, fullname:String, hosttarget:String, port:UInt)
     {
         this.sdRef = sdRef;
         this.moreComing = moreComing;
         this.errorCode = errorCode;
-        this.serviceName = serviceName;
-        this.regtype = regtype;
+        this.fullname = fullname;
+        this.hosttarget = hosttarget;
         this.port = port;
     }
 }
@@ -68,16 +66,7 @@ class ResolveServices
             default: throw "Invalid errorCode value: " + errorCode;
         };
 
-        var _port:UInt;
-
-        var buffer:BytesOutput = new BytesOutput();
-        buffer.writeUInt16(port);
-        var buffer2:BytesInput = new BytesInput(buffer.getBytes());
-        buffer2.bigEndian = true;
-
-        var _port:UInt = buffer2.readInt16();
-
-        _callBack(new ResolveServicesInfo(this, moreComing, _errorCode, fullname, hosttarget, _port));
+        _callBack(new ResolveServicesInfo(this, moreComing, _errorCode, fullname, hosttarget, port));
     }
 
     public function new(forceMulticast:Bool, name:String, regtype:String, domain:String, callBack:ResolveServicesCallBack):Void

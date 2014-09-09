@@ -27,8 +27,6 @@ package hxbonjour;
 
 import #if cpp cpp #else neko #end.Lib;
 import haxe.io.Bytes;
-import haxe.io.BytesInput;
-import haxe.io.BytesOutput;
 import hxbonjour.Flags.ActionFlags;
 
 class RegisterRecordInfo
@@ -81,15 +79,8 @@ class RegisterRecord
     {
         HXBonjour.init();
 
-        var buffer:BytesOutput = new BytesOutput();
-        buffer.bigEndian = true;
-        buffer.writeUInt16(port);
-        var buffer2:BytesInput = new BytesInput(buffer.getBytes());
-
-        var _port:UInt = buffer2.readUInt16();
-
         _callBack = callBack;
-        _dnsHandle = _DNSServiceRegister(name, regType, domain, host, _port, _myCallBack);
+        _dnsHandle = _DNSServiceRegister(name, regType, domain, host, port, _myCallBack);
     }
 
     public function dispose():Void
