@@ -1,2 +1,2 @@
-haxe -x test.TestBonjour -lib hxbonjour
+haxe -x test.Main -lib hxbonjour
 pause

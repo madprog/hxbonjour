@@ -25,14 +25,12 @@
 *******************************************************************************/
 package test;
 
-import hxbonjour.EnumerateDomains;
 import hxbonjour.HXBonjour;
 import haxe.unit.TestCase;
-import haxe.unit.TestRunner;
 
 using test.HelperMacros;
 
-class TestBonjour extends TestCase
+class TestConstructFullName extends TestCase
 {
     private var _serviceName:String = "TestService";
     private var _regtype:String = "_test._tcp";
@@ -53,14 +51,5 @@ class TestBonjour extends TestCase
 
         if (fullname.substr(-1) != ".") fullname += '.';
         assertEquals(fullname, _fullname);
-    }
-
-    public static function main():Void
-    {
-        var runner:TestRunner = new TestRunner();
-        runner.add(new TestBonjour());
-        runner.add(new TestEnumerateDomains());
-        runner.add(new TestRegisterBrowseResolve());
-        runner.run();
     }
 }
