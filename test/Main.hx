@@ -37,6 +37,7 @@ class Main
         runner.add(new TestConstructFullName());
         runner.add(new TestEnumerateDomains());
         runner.add(new TestRegisterBrowseResolve());
+        runner.add(new TestTXTRecord());
         runner.run();
     }
 }
