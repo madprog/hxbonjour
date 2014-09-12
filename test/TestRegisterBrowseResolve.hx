@@ -63,7 +63,7 @@ class TestRegisterBrowseResolve extends TestCase
         if (_sdRefResolve != null) _sdRefResolve.dispose();
     }
 
-    public function testRegisterRecord()
+    public function testRegisterBrowseResolve()
     {
         var semaphoreRegister = { finished: false };
         function callBackRegister(callBackInfo:RegisterRecordInfo):Void
