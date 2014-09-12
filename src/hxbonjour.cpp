@@ -354,15 +354,16 @@ void DNSSD_API hxbonjour_DNSServiceRegister_callback(
 
 value hxbonjour_DNSServiceRegister(value *args, int nbArgs)
 {
-    if (nbArgs != 6)
-        val_throw(alloc_string("Function 'hxbonjour_DNSServiceRegister' requires arguments: name, regtype, domain, host, port, callBack"));
+    if (nbArgs != 7)
+        val_throw(alloc_string("Function 'hxbonjour_DNSServiceRegister' requires arguments: name, regtype, domain, host, port, txtRecord, callBack"));
 
     value name = args[0];
     value regtype = args[1];
     value domain = args[2];
     value host = args[3];
     value port = args[4];
-    value callBack = args[5];
+    value txtRecord = args[5];
+    value callBack = args[6];
 
     DNSServiceRef sdRef = NULL;
     const char *_name;
@@ -370,6 +371,8 @@ value hxbonjour_DNSServiceRegister(value *args, int nbArgs)
     const char *_domain;
     const char *_host;
     uint16_t _port;
+    uint16_t txtRecordLength;
+    const void *_txtRecord;
 
     if (val_is_null(name)) _name = NULL;
     else if (val_is_string(name)) _name = val_get_string(name);
@@ -391,6 +394,10 @@ value hxbonjour_DNSServiceRegister(value *args, int nbArgs)
     else if (val_is_int(port)) _port = htons(val_get_int(port));
     else val_throw(alloc_string("port must be an UInt"));
 
+    if (val_is_null(txtRecord)) { _txtRecord = NULL; txtRecordLength = 0; }
+    else if (val_is_string(txtRecord)) { _txtRecord = val_get_string(txtRecord); txtRecordLength = val_strlen(txtRecord); }
+    else val_throw(alloc_string("txtRecord must be a String"));
+
     if (!check_regtype_format(_regtype))
         val_throw(alloc_string("regtype should be in the form _proto._(tcp|udp)"));
 
@@ -403,8 +410,8 @@ value hxbonjour_DNSServiceRegister(value *args, int nbArgs)
         _domain,
         _host,
         _port,
-        0,
-        NULL,
+        txtRecordLength,
+        _txtRecord,
         hxbonjour_DNSServiceRegister_callback,
         callBack
     );
@@ -495,15 +502,15 @@ void DNSSD_API hxbonjour_DNSServiceResolve_callback(
 )
 {
     value callBack = (value)context;
-    value args[] =
-    {
-        alloc_int(flags),
-        alloc_int(errorCode),
-        alloc_string(fullname),
-        alloc_string(hosttarget),
-        alloc_int(ntohs(port)),
-    };
-    val_callN(callBack, args, sizeof(args) / sizeof(*args));
+
+    value args = alloc_array(6);
+    val_array_set_i(args, 0, alloc_int(flags));
+    val_array_set_i(args, 1, alloc_int(errorCode));
+    val_array_set_i(args, 2, alloc_string(fullname));
+    val_array_set_i(args, 3, alloc_string(hosttarget));
+    val_array_set_i(args, 4, alloc_int(ntohs(port)));
+    val_array_set_i(args, 5, alloc_string_len((const char *)txtRecord, txtLen));
+    val_call1(callBack, args);
 }
 
 value hxbonjour_DNSServiceResolve(value forceMulticast, value name, value regtype, value domain, value callBack)

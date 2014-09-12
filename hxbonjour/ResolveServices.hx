@@ -37,8 +37,9 @@ class ResolveServicesInfo
     public var fullname(default, null):String;
     public var hosttarget(default, null):String;
     public var port(default, null):UInt;
+    public var txtRecord(default, null):TXTRecord;
 
-    public function new(sdRef:ResolveServices, moreComing:Bool, errorCode:ErrorCode, fullname:String, hosttarget:String, port:UInt)
+    public function new(sdRef:ResolveServices, moreComing:Bool, errorCode:ErrorCode, fullname:String, hosttarget:String, port:UInt, txtRecord:String)
     {
         this.sdRef = sdRef;
         this.moreComing = moreComing;
@@ -46,6 +47,7 @@ class ResolveServicesInfo
         this.fullname = fullname;
         this.hosttarget = hosttarget;
         this.port = port;
+        this.txtRecord = TXTRecord.parse(Bytes.ofString(txtRecord));
     }
 }
 
@@ -56,8 +58,15 @@ class ResolveServices
     private var _dnsHandle:Dynamic = null;
     private var _callBack:ResolveServicesCallBack = null;
 
-    private function _myCallBack(flags:Int, errorCode:Int, fullname:String, hosttarget:String, port:Int)
+    private function _myCallBack(args:Array<Dynamic>)
     {
+        var flags:Int = args[0];
+        var errorCode:Int = args[1];
+        var fullname:String = args[2];
+        var hosttarget:String = args[3];
+        var port:Int = args[4];
+        var txtRecord:String = args[5];
+
         var moreComing:Bool = (flags & 0x01) != 0;
 
         var _errorCode:ErrorCode = switch(errorCode)
@@ -66,7 +75,7 @@ class ResolveServices
             default: throw "Invalid errorCode value: " + errorCode;
         };
 
-        _callBack(new ResolveServicesInfo(this, moreComing, _errorCode, fullname, hosttarget, port));
+        _callBack(new ResolveServicesInfo(this, moreComing, _errorCode, fullname, hosttarget, port, txtRecord));
     }
 
     public function new(forceMulticast:Bool, name:String, regtype:String, domain:String, callBack:ResolveServicesCallBack):Void
@@ -87,7 +96,7 @@ class ResolveServices
         _DNSServiceProcessResult(_dnsHandle, timeout);
     }
 
-    private static var _DNSServiceResolve:Bool->String->String->String->(Int->Int->String->String->Int->Void)->Dynamic = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceResolve", 5);
+    private static var _DNSServiceResolve:Bool->String->String->String->(Array<Dynamic>->Void)->Dynamic = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceResolve", 5);
     private static var _DNSServiceProcessResult:Dynamic->Float->Void = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceProcessResult", 2);
     private static var _DNSServiceRefDeallocate:Dynamic->Void = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceRefDeallocate", 1);
 }

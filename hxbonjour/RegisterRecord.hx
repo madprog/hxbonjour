@@ -26,7 +26,6 @@
 package hxbonjour;
 
 import #if cpp cpp #else neko #end.Lib;
-import haxe.io.Bytes;
 import hxbonjour.Flags.ActionFlags;
 
 class RegisterRecordInfo
@@ -75,12 +74,12 @@ class RegisterRecord
         _callBack(new RegisterRecordInfo(this, action, _errorCode, name, regType, domain));
     }
 
-    public function new(name:String, regType:String, domain:String, host:String, port:UInt, callBack:RegisterRecordCallBack):Void
+    public function new(name:String, regType:String, domain:String, host:String, port:UInt, txt:TXTRecord, callBack:RegisterRecordCallBack):Void
     {
         HXBonjour.init();
 
         _callBack = callBack;
-        _dnsHandle = _DNSServiceRegister(name, regType, domain, host, port, _myCallBack);
+        _dnsHandle = _DNSServiceRegister(name, regType, domain, host, port, txt.getBytes().toString(), _myCallBack);
     }
 
     public function dispose():Void
@@ -93,7 +92,7 @@ class RegisterRecord
         _DNSServiceProcessResult(_dnsHandle, timeout);
     }
 
-    private static var _DNSServiceRegister:String->String->String->String->UInt->(UInt->UInt->String->String->String->Void)->Dynamic = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceRegister", -1);
+    private static var _DNSServiceRegister:String->String->String->String->UInt->String->(UInt->UInt->String->String->String->Void)->Dynamic = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceRegister", -1);
     private static var _DNSServiceProcessResult:Dynamic->Float->Void = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceProcessResult", 2);
     private static var _DNSServiceRefDeallocate:Dynamic->Void = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceRefDeallocate", 1);
 }

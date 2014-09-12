@@ -32,6 +32,7 @@ import hxbonjour.Flags.ActionFlags;
 import hxbonjour.HXBonjour;
 import hxbonjour.RegisterRecord;
 import hxbonjour.ResolveServices;
+import hxbonjour.TXTRecord;
 
 using test.HelperMacros;
 
@@ -76,7 +77,10 @@ class TestRegisterBrowseResolve extends TestCase
             assertEquals(_domain, callBackInfo.domain);
         }
 
-        _sdRefRegister = new RegisterRecord(_serviceName, _regType, null, null, _port, callBackRegister);
+        var txt:TXTRecord = new TXTRecord();
+        txt.set("foo", "foobar");
+
+        _sdRefRegister = new RegisterRecord(_serviceName, _regType, null, null, _port, txt, callBackRegister);
 
         while (!semaphoreRegister.finished)
         {
@@ -102,6 +106,8 @@ class TestRegisterBrowseResolve extends TestCase
                 assertEquals(_sdRefResolve, callBackInfo2.sdRef);
                 assertEquals(_fullname, callBackInfo2.fullname);
                 assertTrue(callBackInfo2.hosttarget != null);
+                assertEquals(1, callBackInfo2.txtRecord.length);
+                assertEquals("foobar", callBackInfo2.txtRecord.get("foo"));
                 assertEquals(_port, callBackInfo2.port);
             }
 
