@@ -1,4 +1,4 @@
-/*******************************************************************************
+﻿/*******************************************************************************
 *
 * Copyright (c) 2014 Paul Morelle
 *
@@ -23,22 +23,9 @@
 * SOFTWARE.
 *
 *******************************************************************************/
-package test;
+package hxbonjour;
 
-import haxe.unit.TestRunner;
-
-using test.HelperMacros;
-
-class Main
+enum RecordClass
 {
-    public static function main():Void
-    {
-        var runner:TestRunner = new TestRunner();
-        runner.add(new TestConstructFullName());
-        runner.add(new TestEnumerateDomains());
-        runner.add(new TestRegisterBrowseResolve());
-        runner.add(new TestAddUpdateRemove());
-        runner.add(new TestTXTRecord());
-        runner.run();
-    }
+    IN; /* Internet */
 }

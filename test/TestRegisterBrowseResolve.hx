@@ -44,8 +44,8 @@ class TestRegisterBrowseResolve extends TestCase
     var _serviceName:String = null;
     var _regType:String = null;
     var _port:UInt = null;
-    var _domain:String;
-    var _fullname:String;
+    var _domain:String = null;
+    var _fullname:String = null;
 
     public override function setup()
     {

@@ -69,7 +69,7 @@ class RegisterRecord
         {
             case 0x0: NoError;
             default: throw "Invalid errorCode value: " + errorCode;
-        }
+        };
 
         _callBack(new RegisterRecordInfo(this, action, _errorCode, name, regType, domain));
     }
@@ -90,6 +90,11 @@ class RegisterRecord
     public function iterate(timeout:Float):Void
     {
         _DNSServiceProcessResult(_dnsHandle, timeout);
+    }
+
+    public function addRecord(recordType:RecordType, recordData:String, ttl:Int = 0):RecordRef
+    {
+        return new RecordRef(_dnsHandle, recordType, recordData, ttl);
     }
 
     private static var _DNSServiceRegister:String->String->String->String->UInt->String->(UInt->UInt->String->String->String->Void)->Dynamic = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceRegister", -1);

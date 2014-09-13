@@ -56,6 +56,7 @@
 #include <dns_sd.h>
 
 DEFINE_KIND(k_sdRef);
+DEFINE_KIND(k_RecordRef);
 
 static void throw_error(DNSServiceErrorType error)
 {
@@ -102,6 +103,7 @@ static void throw_error(DNSServiceErrorType error)
 value hxbonjour_init()
 {
     k_sdRef = alloc_kind();
+    k_RecordRef = alloc_kind();
 
     return alloc_null();
 }
@@ -290,7 +292,11 @@ DEFINE_PRIM(hxbonjour_DNSServiceEnumerateDomains, 2);
 
 value hxbonjour_DNSServiceRefDeallocate(value handle)
 {
-    DNSServiceRef sdRef = (DNSServiceRef)val_to_kind(handle, k_sdRef);
+    DNSServiceRef sdRef;
+
+    if (val_is_null(handle)) val_throw(alloc_string("handle cannot be null"));
+    else if (val_is_kind(handle, k_sdRef)) sdRef = (DNSServiceRef)val_to_kind(handle, k_sdRef);
+    else val_throw(alloc_string("handle must be a sdRef"));
 
     DNSServiceRefDeallocate(sdRef);
 
@@ -301,10 +307,11 @@ DEFINE_PRIM(hxbonjour_DNSServiceRefDeallocate, 1);
 
 value hxbonjour_DNSServiceProcessResult(value handle, value timeout)
 {
-    if (!val_is_kind(handle, k_sdRef))
-        val_throw(alloc_string("handle must be a sdRef"));
+    DNSServiceRef sdRef;
 
-    DNSServiceRef sdRef = (DNSServiceRef)val_to_kind(handle, k_sdRef);
+    if (val_is_null(handle)) val_throw(alloc_string("handle cannot be null"));
+    else if (val_is_kind(handle, k_sdRef)) sdRef = (DNSServiceRef)val_to_kind(handle, k_sdRef);
+    else val_throw(alloc_string("handle must be a sdRef"));
 
     double _timeout;
     if (val_is_float(timeout)) _timeout = val_float(timeout);
@@ -522,7 +529,7 @@ value hxbonjour_DNSServiceResolve(value forceMulticast, value name, value regtyp
     const char *_domain;
 
     if (val_is_null(forceMulticast)) val_throw(alloc_string("forceMulticast cannot be null"));
-    else if (val_is_bool(forceMulticast)) _flags = val_get_bool(forceMulticast) ? kDNSServiceFlagsForceMulticast : 0;
+    else if (val_is_bool(forceMulticast)) _flags |= val_get_bool(forceMulticast) ? kDNSServiceFlagsForceMulticast : 0;
     else val_throw(alloc_string("forceMulticast must be a Bool"));
 
     if (val_is_null(name)) val_throw(alloc_string("name cannot be null"));
@@ -561,3 +568,194 @@ value hxbonjour_DNSServiceResolve(value forceMulticast, value name, value regtyp
 }
 
 DEFINE_PRIM(hxbonjour_DNSServiceResolve, 5);
+
+void DNSSD_API hxbonjour_DNSServiceQueryRecord_callback(
+    DNSServiceRef sdRef,
+    DNSServiceFlags flags,
+    uint32_t interfaceIndex,
+    DNSServiceErrorType errorCode,
+    const char *fullname,
+    uint16_t rrtype,
+    uint16_t rrclass,
+    uint16_t rdlen,
+    const void *rdata,
+    uint32_t ttl,
+    void *context
+)
+{
+    value callBack = (value)context;
+
+    value args = alloc_array(7);
+    val_array_set_i(args, 0, alloc_int(flags));
+    val_array_set_i(args, 1, alloc_int(errorCode));
+    val_array_set_i(args, 2, alloc_string(fullname));
+    val_array_set_i(args, 3, alloc_int(rrtype));
+    val_array_set_i(args, 4, alloc_int(rrclass));
+    val_array_set_i(args, 5, alloc_string_len((const char *)rdata, rdlen));
+    val_array_set_i(args, 6, alloc_int(ttl));
+    val_call1(callBack, args);
+}
+
+value hxbonjour_DNSServiceQueryRecord(value forceMulticast, value name, value rrtype, value rrclass, value callBack)
+{
+    DNSServiceRef sdRef = NULL;
+    DNSServiceFlags _flags = 0;
+    const char *_name;
+    uint16_t _rrtype;
+    uint16_t _rrclass;
+
+    if (val_is_null(forceMulticast)) val_throw(alloc_string("forceMulticast cannot be null"));
+    else if (val_is_bool(forceMulticast)) _flags |= val_get_bool(forceMulticast) ? kDNSServiceFlagsForceMulticast : 0;
+    else val_throw(alloc_string("forceMulticast must be a Bool"));
+
+    if (val_is_null(name)) val_throw(alloc_string("name cannot be null"));
+    else if (val_is_string(name)) _name = val_get_string(name);
+    else val_throw(alloc_string("name must be a String"));
+
+    if (val_is_null(rrtype)) val_throw(alloc_string("rrtype cannot be null"));
+    else if (val_is_int(rrtype)) _rrtype = val_get_int(rrtype);
+    else val_throw(alloc_string("rrtype must be an Int"));
+
+    if (val_is_null(rrclass)) val_throw(alloc_string("rrclass cannot be null"));
+    else if (val_is_int(rrclass)) _rrclass = val_get_int(rrclass);
+    else val_throw(alloc_string("rrclass must be an Int"));
+
+    DNSServiceErrorType error = DNSServiceQueryRecord(
+        &sdRef,
+        _flags,
+        kDNSServiceInterfaceIndexAny,
+        _name,
+        _rrtype,
+        _rrclass,
+        hxbonjour_DNSServiceQueryRecord_callback,
+        callBack
+    );
+
+    if (error != kDNSServiceErr_NoError)
+    {
+        throw_error(error);
+    }
+
+    value handle = alloc_abstract(k_sdRef, sdRef);
+    return handle;
+}
+
+DEFINE_PRIM(hxbonjour_DNSServiceQueryRecord, 5);
+
+value hxbonjour_DNSServiceAddRecord(value handle, value rrtype, value rdata, value ttl)
+{
+    DNSServiceRef sdRef;
+    DNSRecordRef  recordRef = NULL;
+    uint16_t _rrtype;
+    uint16_t rdataLength;
+    const void *_rdata;
+    uint32_t _ttl;
+
+    if (val_is_null(handle)) val_throw(alloc_string("handle cannot be null"));
+    else if (val_is_kind(handle, k_sdRef)) sdRef = (DNSServiceRef)val_to_kind(handle, k_sdRef);
+    else val_throw(alloc_string("handle must be a sdRef"));
+
+    if (val_is_null(rrtype)) val_throw(alloc_string("rrtype cannot be null"));
+    else if (val_is_int(rrtype)) _rrtype = val_get_int(rrtype);
+    else val_throw(alloc_string("rrtype must be an Int"));
+
+    if (val_is_null(rdata)) val_throw(alloc_string("rdata cannot be null"));
+    else if (val_is_string(rdata)) { _rdata = val_get_string(rdata); rdataLength = val_strlen(rdata); }
+    else val_throw(alloc_string("rdata must be a String"));
+
+    if (val_is_null(ttl)) _ttl = 0;
+    else if (val_is_int(ttl)) _ttl = val_get_int(ttl);
+    else val_throw(alloc_string("ttl must be an Int"));
+
+    DNSServiceErrorType error = DNSServiceAddRecord(
+        sdRef,
+        &recordRef,
+        0,
+        _rrtype,
+        rdataLength,
+        _rdata,
+        _ttl
+    );
+
+    if (error != kDNSServiceErr_NoError)
+    {
+        throw_error(error);
+    }
+
+    value recordHandle = alloc_abstract(k_RecordRef, recordRef);
+    return recordHandle;
+}
+
+DEFINE_PRIM(hxbonjour_DNSServiceAddRecord, 4);
+
+value hxbonjour_DNSServiceUpdateRecord(value handle, value recordHandle, value rdata, value ttl)
+{
+    DNSServiceRef sdRef;
+    DNSRecordRef  recordRef;
+    uint16_t rdataLength;
+    const void *_rdata;
+    uint32_t _ttl;
+
+    if (val_is_null(handle)) val_throw(alloc_string("handle cannot be null"));
+    else if (val_is_kind(handle, k_sdRef)) sdRef = (DNSServiceRef)val_to_kind(handle, k_sdRef);
+    else val_throw(alloc_string("handle must be a sdRef"));
+
+    if (val_is_null(recordHandle)) val_throw(alloc_string("recordHandle cannot be null"));
+    else if (val_is_kind(recordHandle, k_RecordRef)) recordRef = (DNSRecordRef)val_to_kind(recordHandle, k_RecordRef);
+    else val_throw(alloc_string("recordHandle must be a RecordRef"));
+
+    if (val_is_null(rdata)) val_throw(alloc_string("rdata cannot be null"));
+    else if (val_is_string(rdata)) { _rdata = val_get_string(rdata); rdataLength = val_strlen(rdata); }
+    else val_throw(alloc_string("rdata must be a String"));
+
+    if (val_is_null(ttl)) _ttl = 0;
+    else if (val_is_int(ttl)) _ttl = val_get_int(ttl);
+    else val_throw(alloc_string("ttl must be an Int"));
+
+    DNSServiceErrorType error = DNSServiceUpdateRecord(
+        sdRef,
+        recordRef,
+        0,
+        rdataLength,
+        _rdata,
+        _ttl
+    );
+
+    if (error != kDNSServiceErr_NoError)
+    {
+        throw_error(error);
+    }
+
+    return alloc_null();
+}
+
+DEFINE_PRIM(hxbonjour_DNSServiceUpdateRecord, 4);
+
+value hxbonjour_DNSServiceRemoveRecord(value handle, value recordHandle)
+{
+    DNSServiceRef sdRef;
+    DNSRecordRef  recordRef;
+
+    if (val_is_null(handle)) val_throw(alloc_string("handle cannot be null"));
+    else if (val_is_kind(handle, k_sdRef)) sdRef = (DNSServiceRef)val_to_kind(handle, k_sdRef);
+    else val_throw(alloc_string("handle must be a sdRef"));
+
+    if (val_is_null(recordHandle)) val_throw(alloc_string("recordHandle cannot be null"));
+    else if (val_is_kind(recordHandle, k_RecordRef)) recordRef = (DNSRecordRef)val_to_kind(recordHandle, k_RecordRef);
+    else val_throw(alloc_string("recordHandle must be a RecordRef"));
+
+    DNSServiceErrorType error = DNSServiceRemoveRecord(
+        sdRef,
+        recordRef,
+        0
+    );
+
+    if (error != kDNSServiceErr_NoError)
+    {
+        throw_error(error);
+    }
+
+    return alloc_null();
+}
+
+DEFINE_PRIM(hxbonjour_DNSServiceRemoveRecord, 2);
