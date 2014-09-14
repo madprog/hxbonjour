@@ -65,7 +65,7 @@ class TestRegisterBrowseResolve extends TestCase
 
     public function testRegisterBrowseResolve()
     {
-        var semaphoreRegister = { finished: false };
+        var semaphoreRegister:Semaphore = { finished: false };
         function callBackRegister(callBackInfo:RegisterRecordInfo):Void
         {
             semaphoreRegister.finished = true;
@@ -87,7 +87,7 @@ class TestRegisterBrowseResolve extends TestCase
             _sdRefRegister.iterate(0);
         }
 
-        var semaphoreBrowse = { finished: false };
+        var semaphoreBrowse:Semaphore = { finished: false };
         function callBackBrowse(callBackInfo:BrowseServicesInfo):Void
         {
             semaphoreBrowse.finished = true;
@@ -98,7 +98,7 @@ class TestRegisterBrowseResolve extends TestCase
             assertEquals(_regType, callBackInfo.regtype);
             assertEquals(_domain, callBackInfo.replyDomain);
 
-            var semaphoreResolve = { finished: false };
+            var semaphoreResolve:Semaphore = { finished: false };
             function callBackResolve(callBackInfo2:ResolveServicesInfo):Void
             {
                 semaphoreResolve.finished = true;

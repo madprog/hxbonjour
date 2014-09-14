@@ -32,6 +32,8 @@ import haxe.unit.TestCase;
 import hxbonjour.HXBonjour.IDnsService;
 import sys.io.File;
 
+typedef Semaphore = { finished:Bool };
+
 class HelperMacros
 {
     macro public static function assertRaises(self:ExprOf<TestCase>, expr:Expr, ?checkExpr:Expr):Expr

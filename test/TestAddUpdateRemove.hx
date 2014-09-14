@@ -55,7 +55,7 @@ class TestAddUpdateRemove extends TestCase
         _domain = "local.";
         _fullname = HXBonjour.DNSServiceConstructFullName(_serviceName, _regType, _domain);
 
-        var semaphore = { finished: false };
+        var semaphore:Semaphore = { finished: false };
         function callBack(callBackInfo:RegisterRecordInfo):Void
         {
             semaphore.finished = true;
@@ -82,7 +82,7 @@ class TestAddUpdateRemove extends TestCase
     {
         Sys.sleep(5);
 
-        var semaphore = { finished: false };
+        var semaphore:Semaphore = { finished: false };
         function callBack(queryInfo:QueryRecordInfo):Void
         {
             assertEquals(NoError, queryInfo.errorCode);
