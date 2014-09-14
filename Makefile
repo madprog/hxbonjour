@@ -8,7 +8,7 @@ FLAGS=
 #FLAGS=-Ddebug -DHXCPP_M64
 
 all: haxelib
-	haxe -x test.TestBonjour -lib hxbonjour
+	haxe -x test.Main -lib hxbonjour
 #	cd bin && neko Main.n
 
 .PHONY: lib

@@ -16,6 +16,7 @@
         <compilerflag value="-Iinclude" if="windows"/>
         <section if="linux">
             <compilerflag value="-I/usr/include/x86_64-linux-gnu"/>
+            <compilerflag value="-I/usr/include/x86_64-linux-gnu/c++/4.9"/>
         </section>
 
         <file name="src/hxbonjour.cpp"/>

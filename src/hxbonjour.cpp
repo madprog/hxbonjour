@@ -55,6 +55,10 @@
 #include <cstring>
 #include <dns_sd.h>
 
+#ifdef HX_LINUX
+#include <netinet/in.h>
+#endif/*HX_LINUX*/
+
 DEFINE_KIND(k_sdRef);
 DEFINE_KIND(k_RecordRef);
 
@@ -86,15 +90,6 @@ static void throw_error(DNSServiceErrorType error)
         DECLARE_ERROR(kDNSServiceErr_NATTraversal);
         DECLARE_ERROR(kDNSServiceErr_DoubleNAT);
         DECLARE_ERROR(kDNSServiceErr_BadTime);
-        DECLARE_ERROR(kDNSServiceErr_BadSig);
-        DECLARE_ERROR(kDNSServiceErr_BadKey);
-        DECLARE_ERROR(kDNSServiceErr_Transient);
-        DECLARE_ERROR(kDNSServiceErr_ServiceNotRunning);
-        DECLARE_ERROR(kDNSServiceErr_NATPortMappingUnsupported);
-        DECLARE_ERROR(kDNSServiceErr_NATPortMappingDisabled);
-        DECLARE_ERROR(kDNSServiceErr_NoRouter);
-        DECLARE_ERROR(kDNSServiceErr_PollingMode);
-        DECLARE_ERROR(kDNSServiceErr_Timeout);
 
         default: val_throw(alloc_string("Unknown error"));
     }
