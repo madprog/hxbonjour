@@ -29,6 +29,7 @@ import haxe.macro.Expr;
 import haxe.PosInfos;
 import haxe.CallStack;
 import haxe.unit.TestCase;
+import hxbonjour.HXBonjour.IDnsService;
 import sys.io.File;
 
 class HelperMacros

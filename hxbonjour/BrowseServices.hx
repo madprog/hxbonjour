@@ -28,6 +28,7 @@ package hxbonjour;
 import #if cpp cpp #else neko #end.Lib;
 import haxe.io.Bytes;
 import hxbonjour.Flags.ActionFlags;
+import hxbonjour.HXBonjour.IDnsService;
 
 class BrowseServicesInfo
 {
@@ -53,7 +54,7 @@ class BrowseServicesInfo
 
 typedef BrowseServicesCallBack = BrowseServicesInfo->Void;
 
-class BrowseServices
+class BrowseServices implements IDnsService
 {
     private var _dnsHandle:Dynamic = null;
     private var _callBack:BrowseServicesCallBack = null;

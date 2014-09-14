@@ -28,6 +28,7 @@ package hxbonjour;
 import #if cpp cpp #else neko #end.Lib;
 import hxbonjour.Flags.ActionFlags;
 import hxbonjour.Flags.EnumerateDomainsFlags;
+import hxbonjour.HXBonjour.IDnsService;
 
 class EnumerateDomainsInfo
 {
@@ -51,7 +52,7 @@ class EnumerateDomainsInfo
 
 typedef EnumerateDomainsCallBack = EnumerateDomainsInfo->Void;
 
-class EnumerateDomains
+class EnumerateDomains implements IDnsService
 {
     private var _dnsHandle:Dynamic = null;
     private var _callBack:EnumerateDomainsCallBack = null;

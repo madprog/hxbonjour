@@ -26,6 +26,7 @@
 package hxbonjour;
 
 import #if cpp cpp #else neko #end.Lib;
+import hxbonjour.HXBonjour.IDnsService;
 import hxbonjour.Flags.ActionFlags;
 
 class RegisterRecordInfo
@@ -50,7 +51,7 @@ class RegisterRecordInfo
 
 typedef RegisterRecordCallBack = RegisterRecordInfo->Void;
 
-class RegisterRecord
+class RegisterRecord implements IDnsService
 {
     private var _dnsHandle:Dynamic = null;
     private var _callBack:RegisterRecordCallBack = null;

@@ -57,6 +57,12 @@ import #if cpp cpp #else neko #end.Lib;
 import haxe.macro.Expr;
 import haxe.macro.Expr.ExprOf;
 
+interface IDnsService
+{
+    function iterate(timeout:Float):Void;
+    function dispose():Void;
+}
+
 class HXBonjour
 {
     private static var _initDone = false;

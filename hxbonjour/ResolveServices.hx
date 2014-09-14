@@ -28,6 +28,7 @@ package hxbonjour;
 import #if cpp cpp #else neko #end.Lib;
 import haxe.io.Bytes;
 import hxbonjour.Flags.ActionFlags;
+import hxbonjour.HXBonjour.IDnsService;
 
 class ResolveServicesInfo
 {
@@ -53,7 +54,7 @@ class ResolveServicesInfo
 
 typedef ResolveServicesCallBack = ResolveServicesInfo->Void;
 
-class ResolveServices
+class ResolveServices implements IDnsService
 {
     private var _dnsHandle:Dynamic = null;
     private var _callBack:ResolveServicesCallBack = null;

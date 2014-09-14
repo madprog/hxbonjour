@@ -28,6 +28,7 @@ package hxbonjour;
 import #if cpp cpp #else neko #end.Lib;
 import haxe.io.Bytes;
 import hxbonjour.Flags.ActionFlags;
+import hxbonjour.HXBonjour.IDnsService;
 
 using hxbonjour.RecordType.RecordTypeUtil;
 
@@ -55,7 +56,7 @@ class QueryRecordInfo
 
 typedef QueryRecordCallBack = QueryRecordInfo->Void;
 
-class QueryRecord
+class QueryRecord implements IDnsService
 {
     private var _dnsHandle:Dynamic = null;
     private var _callBack:QueryRecordCallBack = null;
