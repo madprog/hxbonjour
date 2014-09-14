@@ -82,10 +82,9 @@ class TestRegisterBrowseResolve extends TestCase
 
         _sdRefRegister = new RegisterRecord(_serviceName, _regType, null, null, _port, txt, callBackRegister);
 
-        while (!semaphoreRegister.finished)
-        {
-            _sdRefRegister.iterate(0);
-        }
+        iterate(semaphoreRegister, _sdRefRegister);
+
+        assertTrue(semaphoreRegister.finished);
 
         var semaphoreBrowse:Semaphore = { finished: false };
         function callBackBrowse(callBackInfo:BrowseServicesInfo):Void
@@ -113,18 +112,16 @@ class TestRegisterBrowseResolve extends TestCase
 
             _sdRefResolve = new ResolveServices(false, callBackInfo.serviceName, callBackInfo.regtype, callBackInfo.replyDomain, callBackResolve);
 
-            while (!semaphoreResolve.finished)
-            {
-                _sdRefResolve.iterate(0);
-            }
+            iterate(semaphoreResolve, _sdRefResolve);
+
+            assertTrue(semaphoreResolve.finished);
         }
 
         _sdRefBrowse = new BrowseServices(_regType, null, callBackBrowse);
 
-        while (!semaphoreBrowse.finished)
-        {
-            _sdRefBrowse.iterate(0);
-        }
+        iterate(semaphoreBrowse, _sdRefBrowse);
+
+        assertTrue(semaphoreBrowse.finished);
 
         _sdRefRegister.dispose();
         _sdRefRegister = null;

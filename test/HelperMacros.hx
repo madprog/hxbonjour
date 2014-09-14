@@ -84,4 +84,14 @@ class HelperMacros
         self.currentTest.posInfos = infos;
         throw self.currentTest;
     }
+
+    public static function iterate(self:TestCase, semaphore:Semaphore, sdRef:IDnsService)
+    {
+        var counter:Int = 0;
+        while (!semaphore.finished && counter < 5)
+        {
+            sdRef.iterate(1);
+            counter ++;
+        }
+    }
 }

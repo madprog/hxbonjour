@@ -67,10 +67,9 @@ class TestEnumerateDomains extends TestCase
 
         _sdRef = new EnumerateDomains(kDNSServiceFlagsRegistrationDomains, callBack);
 
-        while (!semaphore.finished)
-        {
-            _sdRef.iterate(0);
-        }
+        iterate(semaphore, _sdRef);
+
+        assertTrue(semaphore.finished);
 
         _sdRef.dispose();
         _sdRef = null;

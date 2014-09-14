@@ -66,10 +66,7 @@ class TestAddUpdateRemove extends TestCase
 
         _sdRefRegister = new RegisterRecord(_serviceName, _regType, null, null, _port, txt, callBack);
 
-        while (!semaphore.finished)
-        {
-            _sdRefRegister.iterate(0);
-        }
+        iterate(semaphore, _sdRefRegister);
     }
 
     public override function tearDown()
@@ -95,10 +92,9 @@ class TestAddUpdateRemove extends TestCase
 
         _sdRefQuery = new QueryRecord(false, _fullname, recordType, callBack);
 
-        while (!semaphore.finished)
-        {
-            _sdRefQuery.iterate(0);
-        }
+        iterate(semaphore, _sdRefQuery);
+
+        assertTrue(semaphore.finished);
     }
 
     public function testAddUpdateRemove()
