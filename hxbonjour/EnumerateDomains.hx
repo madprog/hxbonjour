@@ -62,11 +62,11 @@ class EnumerateDomains implements IDnsService
     private function _myCallBack(flags:UInt, interfaceIndex:Int, errorCode:UInt, replyDomain:String)
     {
         var moreComing:Bool = (flags & 0x01) != 0;
-        var action:ActionFlags = switch(flags & 0x06)
+        var action:ActionFlags = switch(flags & 0x02)
         {
+            case 0x0: Remove;
             case 0x2: Add;
-            case 0x4: Remove;
-            default: throw "Invalid action flags value: " + (flags & 0x06);
+            default: throw "Invalid action flags value: " + (flags & 0x02);
         };
 
         var _errorCode:ErrorCode = switch(errorCode)
