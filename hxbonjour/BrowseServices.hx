@@ -53,11 +53,13 @@ class BrowseServicesInfo
 }
 
 typedef BrowseServicesCallBack = BrowseServicesInfo->Void;
+typedef DNSServiceBrowseServicesCallBack = Int->Int->String->String->String->Void;
 
 class BrowseServices implements IDnsService
 {
     private var _dnsHandle:Dynamic = null;
     private var _callBack:BrowseServicesCallBack = null;
+    private var _dnsServiceCallBack:DNSServiceBrowseServicesCallBack = null;
 
     private function _myCallBack(flags:Int, errorCode:Int, serviceName:String, regtype:String, replyDomain:String)
     {
@@ -83,7 +85,8 @@ class BrowseServices implements IDnsService
         HXBonjour.init();
 
         _callBack = callBack;
-        _dnsHandle = _DNSServiceBrowse(regtype, domain, _myCallBack);
+        _dnsServiceCallBack = _myCallBack;
+        _dnsHandle = _DNSServiceBrowse(regtype, domain, _dnsServiceCallBack);
     }
 
     public function dispose():Void
@@ -96,7 +99,7 @@ class BrowseServices implements IDnsService
         _DNSServiceProcessResult(_dnsHandle, timeout);
     }
 
-    private static var _DNSServiceBrowse:String->String->(Int->Int->String->String->String->Void)->Dynamic = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceBrowse", 3);
+    private static var _DNSServiceBrowse:String->String->DNSServiceBrowseServicesCallBack->Dynamic = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceBrowse", 3);
     private static var _DNSServiceProcessResult:Dynamic->Float->Void = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceProcessResult", 2);
     private static var _DNSServiceRefDeallocate:Dynamic->Void = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceRefDeallocate", 1);
 }

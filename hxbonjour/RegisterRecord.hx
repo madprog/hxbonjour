@@ -50,11 +50,13 @@ class RegisterRecordInfo
 }
 
 typedef RegisterRecordCallBack = RegisterRecordInfo->Void;
+typedef DNSServiceRegisterRecordCallBack = UInt->UInt->String->String->String->Void;
 
 class RegisterRecord implements IDnsService
 {
     private var _dnsHandle:Dynamic = null;
     private var _callBack:RegisterRecordCallBack = null;
+    private var _dnsServiceCallBack:DNSServiceRegisterRecordCallBack = null;
 
     private function _myCallBack(flags:UInt, errorCode:UInt, name:String, regType:String, domain:String)
     {
@@ -80,7 +82,8 @@ class RegisterRecord implements IDnsService
         HXBonjour.init();
 
         _callBack = callBack;
-        _dnsHandle = _DNSServiceRegister(name, regType, domain, host, port, txt.getBytes().toString(), _myCallBack);
+        _dnsServiceCallBack = _myCallBack;
+        _dnsHandle = _DNSServiceRegister(name, regType, domain, host, port, txt.getBytes().toString(), _dnsServiceCallBack);
     }
 
     public function dispose():Void
@@ -98,7 +101,7 @@ class RegisterRecord implements IDnsService
         return new RecordRef(_dnsHandle, recordType, recordData, ttl);
     }
 
-    private static var _DNSServiceRegister:String->String->String->String->UInt->String->(UInt->UInt->String->String->String->Void)->Dynamic = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceRegister", -1);
+    private static var _DNSServiceRegister:String->String->String->String->UInt->String->DNSServiceRegisterRecordCallBack->Dynamic = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceRegister", -1);
     private static var _DNSServiceProcessResult:Dynamic->Float->Void = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceProcessResult", 2);
     private static var _DNSServiceRefDeallocate:Dynamic->Void = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceRefDeallocate", 1);
 }

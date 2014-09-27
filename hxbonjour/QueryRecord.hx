@@ -55,11 +55,13 @@ class QueryRecordInfo
 }
 
 typedef QueryRecordCallBack = QueryRecordInfo->Void;
+typedef DNSServiceQueryRecordCallBack = Array<Dynamic>->Void;
 
 class QueryRecord implements IDnsService
 {
     private var _dnsHandle:Dynamic = null;
     private var _callBack:QueryRecordCallBack = null;
+    private var _dnsServiceCallBack:DNSServiceQueryRecordCallBack = null;
 
     private function _myCallBack(args:Array<Dynamic>):Void
     {
@@ -110,7 +112,8 @@ class QueryRecord implements IDnsService
         };
 
         _callBack = callBack;
-        _dnsHandle = _DNSServiceQueryRecord(forceMulticast, fullname, _recordType, _recordClass, _myCallBack);
+        _dnsServiceCallBack = _myCallBack;
+        _dnsHandle = _DNSServiceQueryRecord(forceMulticast, fullname, _recordType, _recordClass, _dnsServiceCallBack);
     }
 
     public function dispose():Void
@@ -123,7 +126,7 @@ class QueryRecord implements IDnsService
         _DNSServiceProcessResult(_dnsHandle, timeout);
     }
 
-    private static var _DNSServiceQueryRecord:Bool->String->Int->Int->(Array<Dynamic>->Void)->Dynamic = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceQueryRecord", 5);
+    private static var _DNSServiceQueryRecord:Bool->String->Int->Int->DNSServiceQueryRecordCallBack->Dynamic = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceQueryRecord", 5);
     private static var _DNSServiceProcessResult:Dynamic->Float->Void = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceProcessResult", 2);
     private static var _DNSServiceRefDeallocate:Dynamic->Void = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceRefDeallocate", 1);
 }

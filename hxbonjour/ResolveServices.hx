@@ -53,11 +53,13 @@ class ResolveServicesInfo
 }
 
 typedef ResolveServicesCallBack = ResolveServicesInfo->Void;
+typedef DNSServiceResolveServicesCallBack = Array<Dynamic>->Void;
 
 class ResolveServices implements IDnsService
 {
     private var _dnsHandle:Dynamic = null;
     private var _callBack:ResolveServicesCallBack = null;
+    private var _dnsServiceCallBack:DNSServiceResolveServicesCallBack = null;
 
     private function _myCallBack(args:Array<Dynamic>)
     {
@@ -84,7 +86,8 @@ class ResolveServices implements IDnsService
         HXBonjour.init();
 
         _callBack = callBack;
-        _dnsHandle = _DNSServiceResolve(forceMulticast, name, regtype, domain, _myCallBack);
+        _dnsServiceCallBack = _myCallBack;
+        _dnsHandle = _DNSServiceResolve(forceMulticast, name, regtype, domain, _dnsServiceCallBack);
     }
 
     public function dispose():Void
@@ -97,7 +100,7 @@ class ResolveServices implements IDnsService
         _DNSServiceProcessResult(_dnsHandle, timeout);
     }
 
-    private static var _DNSServiceResolve:Bool->String->String->String->(Array<Dynamic>->Void)->Dynamic = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceResolve", 5);
+    private static var _DNSServiceResolve:Bool->String->String->String->DNSServiceResolveServicesCallBack->Dynamic = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceResolve", 5);
     private static var _DNSServiceProcessResult:Dynamic->Float->Void = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceProcessResult", 2);
     private static var _DNSServiceRefDeallocate:Dynamic->Void = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceRefDeallocate", 1);
 }

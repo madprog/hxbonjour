@@ -51,11 +51,13 @@ class EnumerateDomainsInfo
 }
 
 typedef EnumerateDomainsCallBack = EnumerateDomainsInfo->Void;
+typedef DNSServiceEnumerateDomainsCallBack = UInt->Int->UInt->String->Void;
 
 class EnumerateDomains implements IDnsService
 {
     private var _dnsHandle:Dynamic = null;
     private var _callBack:EnumerateDomainsCallBack = null;
+    private var _dnsServiceCallBack:DNSServiceEnumerateDomainsCallBack = null;
 
     private function _myCallBack(flags:UInt, interfaceIndex:Int, errorCode:UInt, replyDomain:String)
     {
@@ -87,7 +89,8 @@ class EnumerateDomains implements IDnsService
         };
 
         _callBack = callBack;
-        _dnsHandle = _DNSServiceEnumerateDomains(_flags, _myCallBack);
+        _dnsServiceCallBack = _myCallBack;
+        _dnsHandle = _DNSServiceEnumerateDomains(_flags, _dnsServiceCallBack);
     }
 
     public function dispose():Void
@@ -100,7 +103,7 @@ class EnumerateDomains implements IDnsService
         _DNSServiceProcessResult(_dnsHandle, timeout);
     }
 
-    private static var _DNSServiceEnumerateDomains:UInt->(UInt->Int->UInt->String->Void)->Dynamic = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceEnumerateDomains", 2);
+    private static var _DNSServiceEnumerateDomains:UInt->DNSServiceEnumerateDomainsCallBack->Dynamic = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceEnumerateDomains", 2);
     private static var _DNSServiceProcessResult:Dynamic->Float->Void = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceProcessResult", 2);
     private static var _DNSServiceRefDeallocate:Dynamic->Void = Lib.loadLazy("hxbonjour", "hxbonjour_DNSServiceRefDeallocate", 1);
 }
