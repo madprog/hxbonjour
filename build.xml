@@ -4,12 +4,12 @@
     <set name="LIB_DIR" value="-L" unless="windows"/>
     <set name="LIB_DIR" value="-libpath:" if="windows"/>
     <section if="linux">
-        <set name="LIB_SUFFIX" value="Linux" unless="HXCPP_M64"/>
-        <set name="LIB_SUFFIX" value="Linux64" if="HXCPP_M64"/>
+        <set name="LIB_SUFFIX" value="linux" unless="HXCPP_M64"/>
+        <set name="LIB_SUFFIX" value="linux64" if="HXCPP_M64"/>
     </section>
     <section if="windows">
-        <set name="LIB_SUFFIX" value="Windows" unless="HXCPP_M64"/>
-        <set name="LIB_SUFFIX" value="Windows64" if="HXCPP_M64"/>
+        <set name="LIB_SUFFIX" value="windows" unless="HXCPP_M64"/>
+        <set name="LIB_SUFFIX" value="windows64" if="HXCPP_M64"/>
     </section>
 
     <files id="common">
