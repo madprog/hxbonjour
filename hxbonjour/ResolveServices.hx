@@ -35,16 +35,22 @@ class ResolveServicesInfo
     public var sdRef(default, null):ResolveServices;
     public var moreComing(default, null):Bool;
     public var errorCode(default, null):ErrorCode;
+    public var name(default, null):String;
+    public var regtype(default, null):String;
+    public var domain(default, null):String;
     public var fullname(default, null):String;
     public var hosttarget(default, null):String;
     public var port(default, null):UInt;
     public var txtRecord(default, null):TXTRecord;
 
-    public function new(sdRef:ResolveServices, moreComing:Bool, errorCode:ErrorCode, fullname:String, hosttarget:String, port:UInt, txtRecord:String)
+    public function new(sdRef:ResolveServices, moreComing:Bool, errorCode:ErrorCode, name:String, regtype:String, domain:String, fullname:String, hosttarget:String, port:UInt, txtRecord:String)
     {
         this.sdRef = sdRef;
         this.moreComing = moreComing;
         this.errorCode = errorCode;
+        this.name = name;
+        this.regtype = regtype;
+        this.domain = domain;
         this.fullname = fullname;
         this.hosttarget = hosttarget;
         this.port = port;
@@ -60,6 +66,9 @@ class ResolveServices implements IDnsService
     private var _dnsHandle:Dynamic = null;
     private var _callBack:ResolveServicesCallBack = null;
     private var _dnsServiceCallBack:DNSServiceResolveServicesCallBack = null;
+    public var name(default, null):String;
+    public var regtype(default, null):String;
+    public var domain(default, null):String;
 
     private function _myCallBack(args:Array<Dynamic>)
     {
@@ -78,7 +87,7 @@ class ResolveServices implements IDnsService
             default: throw "Invalid errorCode value: " + errorCode;
         };
 
-        _callBack(new ResolveServicesInfo(this, moreComing, _errorCode, fullname, hosttarget, port, txtRecord));
+        _callBack(new ResolveServicesInfo(this, moreComing, _errorCode, name, regtype, domain, fullname, hosttarget, port, txtRecord));
     }
 
     public function new(forceMulticast:Bool, name:String, regtype:String, domain:String, callBack:ResolveServicesCallBack):Void
@@ -87,6 +96,9 @@ class ResolveServices implements IDnsService
 
         _callBack = callBack;
         _dnsServiceCallBack = _myCallBack;
+        this.name = name;
+        this.regtype = regtype;
+        this.domain = domain;
         _dnsHandle = _DNSServiceResolve(forceMulticast, name, regtype, domain, _dnsServiceCallBack);
     }
 
